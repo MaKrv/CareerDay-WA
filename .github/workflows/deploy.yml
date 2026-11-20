@@ -18,6 +18,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,6 +34,46 @@ jobs:
 
       - name: Build WorkAdventure maps
         run: npm run buildmap
+
+      - name: Verify map textures
+        shell: bash
+        run: |
+          echo "Checking generated map files..."
+          ls -lh dist/YraYaPosplyy1.tmj
+          ls -lh dist/YraYaPosplyy1-chunk-*.png
+
+          echo "Checking referenced image files..."
+
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const map = JSON.parse(
+            fs.readFileSync('dist/YraYaPosplyy1.tmj', 'utf8')
+          );
+
+          let missing = 0;
+
+          for (const ts of map.tilesets ?? []) {
+            if (!ts.image) continue;
+
+            const file = path.resolve('dist', ts.image);
+
+            if (!fs.existsSync(file)) {
+              console.error('MISSING:', ts.image);
+              missing++;
+            } else {
+              console.log('OK:', ts.image);
+            }
+          }
+
+          if (missing > 0) {
+            console.error(`${missing} texture files missing!`);
+            process.exit(1);
+          }
+
+          console.log('All referenced texture files exist.');
+          NODE
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5

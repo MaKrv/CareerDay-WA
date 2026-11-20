@@ -1,0 +1,57 @@
+
+name: Auto Upload CareerDay to WorkAdventure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: careerday-map-storage-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Remove invalid manual WAM
+        run: rm -f public/CareerDay.wam
+
+      - name: Check Map Storage configuration
+        env:
+          MAP_STORAGE_URL: ${{ secrets.MAP_STORAGE_URL }}
+          MAP_STORAGE_API_KEY: ${{ secrets.MAP_STORAGE_API_KEY }}
+          UPLOAD_DIRECTORY: ${{ secrets.UPLOAD_DIRECTORY }}
+        run: |
+          test -n "$MAP_STORAGE_URL" || { echo "Missing storage URL"; exit 1; }
+          test -n "$MAP_STORAGE_API_KEY" || { echo "Missing API key"; exit 1; }
+          test -n "$UPLOAD_DIRECTORY" || { echo "Missing upload directory"; exit 1; }
+          test "$UPLOAD_DIRECTORY" != "/" || { echo "Root upload is blocked"; exit 1; }
+
+      - name: Build and upload to WorkAdventure
+        env:
+          MAP_STORAGE_URL: ${{ secrets.MAP_STORAGE_URL }}
+          MAP_STORAGE_API_KEY: ${{ secrets.MAP_STORAGE_API_KEY }}
+          UPLOAD_DIRECTORY: ${{ secrets.UPLOAD_DIRECTORY }}
+        run: |
+          npm run upload -- \
+            -u "$MAP_STORAGE_URL" \
+            -k "$MAP_STORAGE_API_KEY" \
+            -d "$UPLOAD_DIRECTORY"

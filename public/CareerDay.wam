@@ -1,0 +1,20 @@
+﻿{
+  "version": "2.1.0",
+  "mapUrl": "https://makrv.github.io/CareerDay-WA/YraYaPosplyy1.tmj",
+  "entities": {},
+  "areas": [],
+  "entityCollections": [
+    {
+      "url": "https://play.workadventu.re/collections/FurnitureCollection.json",
+      "type": "file"
+    },
+    {
+      "url": "https://play.workadventu.re/collections/OfficeCollection.json",
+      "type": "file"
+    }
+  ],
+  "metadata": {
+    "name": "Career Day",
+    "description": "Career Day at KAI"
+  }
+}
